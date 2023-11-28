@@ -3,7 +3,7 @@ use core::u16;
 use log::error;
 
 fn circle_sum(a: u8, b: u8, m: u32) -> Option<u8> {
-    let r =( a + b )  % m as u8;
+    let r =( a as u16 + b as u16 )  % m as u16;
     match r {
         t => Option::Some(t as u8),
         _ => None
@@ -32,7 +32,7 @@ fn encode(word: &str, key: &str) -> Option<String> {
 
         let a = word[i];
         let b = key[j];
-        let r = circle_sum(a as u8, b as u8, 255 );
+        let r = circle_sum(a as u8, b as u8, 256 );
         match r {
             Some(T) => {
                 result.push(T as char)
@@ -59,7 +59,7 @@ fn decode(word: &str, key: &str) -> Option<String> {
 
         let a = word[i];
         let b = key[j];
-        let r = circle_minus(a as u8, b as u8, 255 );
+        let r = circle_minus(a as u8, b as u8, 256 );
         match r {
             Some(T) => {
                 result.push(T as char)
@@ -78,9 +78,9 @@ fn main() {
     let command_list = ["encode", "decode"];
 
     if args.len() == 1 {
-        args.push("encode".to_string());
-        args.push("000".to_string());
-        args.push("1".to_string());
+        args.push("decode".to_string());
+        args.push("111".to_string());
+        args.push("2".to_string());
     }
 
     if args.len() != 4 {
@@ -116,5 +116,6 @@ fn main() {
             }
         }
     }
-
+    let a = 255 as char;
+    println!("a: {}", a);
 }
