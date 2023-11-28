@@ -1,17 +1,20 @@
 use std::io::Write;
 use core::u16;
+use log::error;
 
-fn circle_sum(a: u32, b: u32, m: u32) -> Option<u32> {
-    match ( a - b )  % m {
-        Some(t) => Option::Some(t),
-        None => None
+fn circle_sum(a: u8, b: u8, m: u32) -> Option<u8> {
+    let r =( a + b )  % m as u8;
+    match r {
+        t => Option::Some(t as u8),
+        _ => None
     }
 }
 
-fn circle_minus(a: u32, b: u32, m: u32) -> Option<u32> {
-    match ( a + b )  % m {
-        Some(t) => Option::Some(t),
-        None => None
+fn circle_minus(a: u8, b: u8, m: u32) -> Option<u8> {
+    let r =( a as i16 - b as i16 )  % m as i16;
+    match r {
+        t => Option::Some(t as u8),
+        _ => None
     }
 }
 
@@ -23,18 +26,20 @@ fn encode(word: &str, key: &str) -> Option<String> {
     let word_len = word.len();
     let key_len = key.len();
     let mut result = String::default();
+    let mut j = 0;
 
-    for i in 0..word_len-1 {
-        let mut j = 0;
-        let a = word[i].to_digit(10)?;
-        let b = key[j].to_digit(10)?;
-        match circle_minus(a, b, word_len as u32) {
+    for i in 0..word_len {
+
+        let a = word[i];
+        let b = key[j];
+        let r = circle_sum(a as u8, b as u8, 255 );
+        match r {
             Some(T) => {
-                result.push(std::char::from_digit(T, 10)?)
+                result.push(T as char)
             },
-            None => return Option::None,
+            None => return None,
         }
-        j = circle_sum(j as u32, 1, key_len as u32)? as usize;
+        j = circle_sum(j as u8, 1, key_len as u32)? as usize;
     }
 
     return Option::Some(result);
@@ -48,28 +53,35 @@ fn decode(word: &str, key: &str) -> Option<String> {
     let word_len = word.len();
     let key_len = key.len();
     let mut result = String::default();
+    let mut j = 0;
 
-    for i in 0..word_len-1 {
-        let mut j = 0;
-        let a = word[i].to_digit(10)?;
-        let b = key[j].to_digit(10)?;
+    for i in 0..word_len {
 
-        match circle_sum(a, b, word_len as u32) {
+        let a = word[i];
+        let b = key[j];
+        let r = circle_minus(a as u8, b as u8, 255 );
+        match r {
             Some(T) => {
-                result.push(std::char::from_digit(T, 10)?)
+                result.push(T as char)
             },
-            None => return Option::None,
+            None => return None,
         }
-        j = circle_sum(j as u32, 1, key_len as u32)? as usize;
+        j = circle_sum(j as u8, 1, key_len as u32)? as usize;
     }
 
     return Option::Some(result);
 }
 fn main() {
 
-    let args: Vec<String> = std::env::args().collect();
+    let mut args: Vec<String> = std::env::args().collect();
 
     let command_list = ["encode", "decode"];
+
+    if args.len() == 1 {
+        args.push("encode".to_string());
+        args.push("000".to_string());
+        args.push("1".to_string());
+    }
 
     if args.len() != 4 {
         writeln!(std::io::stderr(), "Not enough arguments").unwrap();
@@ -84,12 +96,25 @@ fn main() {
     }
 
     if args[1] == command_list[0] {
-       let res = encode(&args[2], &args[3])?;
-        println!("{}", res);
+       match encode(&args[2], &args[3]) {
+           Some(T) => println!("{}", T),
+           None => {
+               writeln!(std::io::stderr(), "Some error").unwrap();
+               std::process::exit(1);
+
+           }
+       }
+
     }
     else {
-        let res = decode(&args[2], &args[3])?;
-        println!("{}", res);
+        match decode(&args[2], &args[3]) {
+            Some(T) => println!("{}", T),
+            None => {
+                writeln!(std::io::stderr(), "Some error").unwrap();
+                std::process::exit(1);
+
+            }
+        }
     }
 
 }
